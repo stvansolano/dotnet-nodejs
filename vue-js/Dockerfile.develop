@@ -1,0 +1,41 @@
+#FROM node:10-alpine as build-node
+#stvansolano/docker-dotnet-nodejs:dev
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1
+
+ENV NPM_CONFIG_LOGLEVEL info
+ENV NODE_VERSION 12.18.2
+
+RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz" \
+  && tar -xzf "node-v$NODE_VERSION-linux-x64.tar.gz" -C /usr/local --strip-components=1 \
+  && ln -s /usr/local/bin/node /usr/local/bin/nodejs  \
+  && rm "node-v$NODE_VERSION-linux-x64.tar.gz"
+
+RUN cd /tmp && wget https://www.npmjs.org/install.sh && sh install.sh
+
+COPY ["samples/razor/web/razor-vue", "./src"]
+
+##RUN npm install --global @vue/cli
+                #typescript typings
+
+WORKDIR /src
+
+RUN npm install
+ENV BuildingDocker true
+ENV ASPNETCORE_ENVIRONMENT=Development
+# build app for production with minification
+EXPOSE 80
+EXPOSE 8080
+EXPOSE 5000
+EXPOSE 5001
+EXPOSE 5001
+#RUN dotnet run "RazorVue.csproj"
+
+ENTRYPOINT dotnet watch run "RazorVue.csproj"
+
+#RUN npm run build
+
+#CMD [ "http-server", "dist" ]
+
+# docker build --rm -f "samples/razor/web/razor-vue/Dockerfile.develop" -t dotnet-nodejs:vue .
+# docker run -v ${PWD}/samples/razor/web/razor-vue:/src -p 5000:5000 -p 5001:5001 -p 5002:5002 -p 80:80 -t dotnet-nodejs:vue
+# -p 8080:8080/tcp
